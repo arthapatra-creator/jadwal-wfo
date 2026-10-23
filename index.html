@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jadwal Work From Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6f8; --panel:#ffffff; --ink:#12263a; --muted:#5d7083; --line:#d7e0e7;
+  --brand:#0b5d7a; --brand-ink:#ffffff; --ok:#e6f3ef; --ok-ink:#0f6b50;
+  --warn:#fff1d6; --warn-ink:#8a5a00; --full:#fde3e1; --full-ink:#a3271f;
+  --focus:#f0a500;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1a24; --panel:#15242f; --ink:#e8eef3; --muted:#9db0bf; --line:#2a3d4b;
+  --brand:#5cc0e0; --brand-ink:#08202b; --ok:#143a30; --ok-ink:#7fe0bb;
+  --warn:#3d3012; --warn-ink:#f5c867; --full:#41201e; --full-ink:#ff9d94;}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding:24px 16px 48px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;letter-spacing:-.02em;margin:0 0 6px;line-height:1.1}
+.lead{color:var(--muted);margin:0 0 20px;max-width:62ch}
+.demo{background:var(--warn);color:var(--warn-ink);padding:10px 14px;border-radius:8px;font-size:.9rem;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;align-items:start}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-head h2{font-size:1.1rem;margin:0;font-weight:600}
+.nav{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:1.2rem;cursor:pointer}
+.nav:disabled{opacity:.35;cursor:not-allowed}
+.dow,.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow span{text-align:center;font-size:.78rem;color:var(--muted);padding-bottom:4px}
+.day{min-height:58px;border-radius:10px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:inherit;cursor:pointer;padding:4px 2px}
+.day b{font-weight:600;font-size:.98rem}
+.day small{font-size:.68rem}
+.day.ok{background:var(--ok);color:var(--ok-ink)}
+.day.warn{background:var(--warn);color:var(--warn-ink)}
+.day.full{background:var(--full);color:var(--full-ink)}
+.day.off{background:transparent;color:var(--muted);opacity:.45;cursor:not-allowed}
+.day.empty{visibility:hidden}
+.day.sel{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.day:disabled{cursor:not-allowed}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.need{font-weight:600;font-size:1.05rem;margin:0 0 2px}
+.need-sub{font-size:.82rem;color:var(--muted);margin:0 0 12px}
+.chosen{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:8px}
+.chosen li{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 8px 8px 12px;font-size:.9rem}
+.chosen li span small{display:block;color:var(--muted);font-size:.75rem}
+.chosen .rm{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-size:1rem}
+.chosen .none{border-style:dashed;color:var(--muted);justify-content:flex-start}
+label{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
+input[type=text]{width:100%;font:inherit;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:14px}
+input[type=text]:focus{border-color:var(--brand)}
+.hint{font-size:.78rem;color:var(--muted);margin:-8px 0 14px}
+.submit{width:100%;font:inherit;font-weight:600;padding:14px;border:0;border-radius:10px;background:var(--brand);color:var(--brand-ink);cursor:pointer}
+.submit:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:14px;padding:11px 14px;border-radius:10px;font-size:.9rem;display:none}
+.msg.show{display:block}
+.msg.good{background:var(--ok);color:var(--ok-ink)}
+.msg.bad{background:var(--full);color:var(--full-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Jadwal Work From Office</h1>
+  <p class="lead">Isi NIK untuk melihat jumlah hari WFO yang wajib Anda pilih, lalu pilih tanggalnya di kalender. Kuota WFO maksimal 15 orang per hari.</p>
+  <div id="demo" class="demo" hidden>Mode demo: halaman belum terhubung ke Google Sheets, jadi data tidak tersimpan. Isi SCRIPT_URL di bagian atas script untuk menghubungkannya. NIK uji coba untuk 1 hari WFO: 1001 sampai 1005.</div>
+
+  <div class="grid">
+    <section class="panel" aria-label="Kalender">
+      <div class="cal-head">
+        <button class="nav" id="prev" aria-label="Bulan sebelumnya">‹</button>
+        <h2 id="monthTitle" aria-live="polite"></h2>
+        <button class="nav" id="next" aria-label="Bulan berikutnya">›</button>
+      </div>
+      <div class="dow" aria-hidden="true"><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span></div>
+      <div class="days" id="days"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok)"></i>Tersedia</span>
+        <span><i style="background:var(--warn)"></i>Hampir penuh</span>
+        <span><i style="background:var(--full)"></i>Penuh</span>
+        <span><i style="background:var(--brand)"></i>Pilihan Anda</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Formulir">
+      <label for="nama">Nama</label>
+      <input type="text" id="nama" autocomplete="off" maxlength="60" placeholder="Nama lengkap">
+      <label for="nik">NIK</label>
+      <input type="text" id="nik" autocomplete="off" maxlength="20" placeholder="Nomor induk karyawan">
+      <p class="hint">Huruf dan angka, 4–20 karakter.</p>
+
+      <p class="need" id="need"></p>
+      <p class="need-sub" id="needSub"></p>
+      <ul class="chosen" id="chosen"></ul>
+
+      <button class="submit" id="submit" disabled>Simpan jadwal WFO</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ====== PENGATURAN ====== */
+const SCRIPT_URL = "https://script.google.com/a/macros/indomaret.com/s/AKfycbyIDXuIVMML3B1S_MJwa3PBwqSTAnUDX4DnWX4vse8kEYYpgfqUmPLTnIqCShMFbscj/exec";   // tempel URL Web App Google Apps Script di sini
+const MAX_QUOTA  = 15;   // harus sama dengan MAX_QUOTA di Code.gs
+const DEMO_NIK_1_HARI = ["1001","1002","1003","1004","1005"]; // hanya dipakai di mode demo
+/* ======================== */
+
+const MONTHS=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+const NIK_RE=/^[A-Z0-9]{4,20}$/;
+
+const now=new Date();
+const todayKey=keyOf(now.getFullYear(),now.getMonth(),now.getDate());
+const minMonth=now.getFullYear()*12+now.getMonth();
+let viewY=now.getFullYear(), viewM=now.getMonth();
+let counts={}, selected=[], required=2, nikKnown=false, sending=false, lookupTimer=null;
+
+const DEMO=!SCRIPT_URL;
+if(DEMO){
+  $("#demo").hidden=false;
+  for(let i=1;i<40;i++){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i);
+    counts[keyOf(d.getFullYear(),d.getMonth(),d.getDate())]=[3,9,12,15,6,14,0][i%7];}
+}
+
+function weekStart(k){
+  const [y,m,d]=k.split("-").map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d,12));
+  dt.setUTCDate(dt.getUTCDate()-((dt.getUTCDay()+6)%7));
+  return dt.toISOString().slice(0,10);
+}
+const longDate=k=>{const [y,m,d]=k.split("-").map(Number);
+  return new Date(y,m-1,d).toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});};
+
+async function loadCounts(){
+  if(DEMO){render();return;}
+  try{
+    const j=await (await fetch(SCRIPT_URL+"?action=counts")).json();
+    if(j.ok)counts=j.counts;
+  }catch(e){showMsg("Gagal memuat data kuota. Muat ulang halaman.","bad");}
+  render();
+}
+
+async function fetchRequired(nik){
+  if(DEMO)return DEMO_NIK_1_HARI.includes(nik)?1:2;
+  const j=await (await fetch(SCRIPT_URL+"?action=required&nik="+encodeURIComponent(nik))).json();
+  return j.ok?j.hari:2;
+}
+
+function trimSelection(){
+  if(selected.length>required)selected=selected.slice(selected.length-required);
+}
+
+function onNikInput(){
+  clearTimeout(lookupTimer);
+  const nik=$("#nik").value.trim().toUpperCase();
+  if(!NIK_RE.test(nik)){nikKnown=false;required=2;updatePanel();return;}
+  lookupTimer=setTimeout(async()=>{
+    try{
+      const hari=await fetchRequired(nik);
+      if(nik!==$("#nik").value.trim().toUpperCase())return; // input sudah berubah
+      required=hari;nikKnown=true;trimSelection();render();
+    }catch(e){}
+  },400);
+}
+$("#nik").addEventListener("input",onNikInput);
+
+function render(){
+  $("#monthTitle").textContent=`${MONTHS[viewM]} ${viewY}`;
+  $("#prev").disabled=(viewY*12+viewM)<=minMonth;
+  const offset=(new Date(viewY,viewM,1).getDay()+6)%7;
+  const total=new Date(viewY,viewM+1,0).getDate();
+  let html="";
+  for(let i=0;i<offset;i++)html+='<span class="day empty"></span>';
+  for(let d=1;d<=total;d++){
+    const k=keyOf(viewY,viewM,d), dow=(offset+d-1)%7;
+    const weekend=dow>=5, past=k<todayKey, used=counts[k]||0, full=used>=MAX_QUOTA;
+    const isSel=selected.includes(k);
+    let cls="", sub="", dis=false;
+    if(weekend||past){cls="off";dis=true;}
+    else if(full){cls="full";sub="Penuh";dis=true;}
+    else{cls=used>=10?"warn":"ok";sub=`${used}/${MAX_QUOTA}`;}
+    if(isSel){cls+=" sel";dis=false;}
+    html+=`<button class="day ${cls}" data-k="${k}" ${dis?"disabled":""} aria-label="${d} ${MONTHS[viewM]}${sub?", terisi "+sub:""}" aria-pressed="${isSel}"><b>${d}</b><small>${sub}</small></button>`;
+  }
+  $("#days").innerHTML=html;
+  updatePanel();
+}
+
+function updatePanel(){
+  $("#need").textContent=`Pilih ${required} hari WFO`;
+  $("#needSub").textContent=(nikKnown?"":"Isi NIK dulu agar jumlah hari sesuai. ")+
+    `${selected.length} dari ${required} tanggal dipilih.`+(required>1?" Semua tanggal harus dalam minggu yang sama.":"");
+  const list=[...selected].sort();
+  $("#chosen").innerHTML=list.length?list.map(k=>
+    `<li><span>${longDate(k)}<small>${counts[k]||0} dari ${MAX_QUOTA} kursi terisi</small></span><button class="rm" data-k="${k}" aria-label="Hapus ${longDate(k)}">✕</button></li>`
+  ).join(""):'<li class="none">Belum ada tanggal dipilih</li>';
+  $("#submit").disabled=sending||selected.length!==required;
+}
+
+function showMsg(t,type){const m=$("#msg");m.textContent=t;m.className="msg show "+type;}
+function hideMsg(){$("#msg").className="msg";}
+
+$("#days").addEventListener("click",e=>{
+  const b=e.target.closest(".day[data-k]"); if(!b||b.disabled)return;
+  const k=b.dataset.k; hideMsg();
+  if(selected.includes(k))selected=selected.filter(x=>x!==k);
+  else{selected.push(k);trimSelection();}   // jika melebihi, tanggal terlama diganti
+  render();
+});
+$("#chosen").addEventListener("click",e=>{
+  const b=e.target.closest(".rm"); if(!b)return;
+  selected=selected.filter(x=>x!==b.dataset.k); hideMsg(); render();
+});
+$("#prev").onclick=()=>{viewM--;if(viewM<0){viewM=11;viewY--;}render();};
+$("#next").onclick=()=>{viewM++;if(viewM>11){viewM=0;viewY++;}render();};
+
+$("#submit").onclick=async()=>{
+  const nama=$("#nama").value.trim().replace(/\s+/g," ");
+  const nik=$("#nik").value.trim().toUpperCase();
+  if(nama.length<2)return showMsg("Isi nama dengan lengkap (minimal 2 karakter).","bad");
+  if(!NIK_RE.test(nik))return showMsg("NIK harus 4–20 karakter, hanya huruf dan angka.","bad");
+
+  sending=true; $("#submit").textContent="Menyimpan..."; updatePanel(); hideMsg();
+  try{
+    // pastikan jumlah hari sesuai NIK yang terakhir diisi
+    required=await fetchRequired(nik); nikKnown=true;
+    if(selected.length!==required){
+      showMsg(`NIK ini wajib memilih tepat ${required} hari WFO. Saat ini terpilih ${selected.length}.`,"bad");
+      trimSelection(); sending=false; $("#submit").textContent="Simpan jadwal WFO"; render(); return;
+    }
+    const tanggal=[...selected].sort();
+    if(tanggal.some(t=>weekStart(t)!==weekStart(tanggal[0]))){
+      showMsg("Semua tanggal harus berada dalam minggu yang sama.","bad");
+      sending=false; $("#submit").textContent="Simpan jadwal WFO"; render(); return;
+    }
+    let res;
+    if(DEMO){
+      await new Promise(r=>setTimeout(r,500));
+      if(tanggal.some(t=>(counts[t]||0)>=MAX_QUOTA))res={ok:false,error:"Ada tanggal yang kuotanya sudah penuh."};
+      else{tanggal.forEach(t=>counts[t]=(counts[t]||0)+1);res={ok:true,message:`Jadwal tersimpan untuk ${tanggal.length} hari (mode demo).`};}
+    }else{
+      const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({nama,nik,tanggal})});
+      res=await r.json();
+    }
+    if(res.ok){
+      showMsg(res.message||"Jadwal WFO tersimpan.","good");
+      $("#nama").value="";$("#nik").value="";selected=[];required=2;nikKnown=false;
+    }else showMsg(res.error||"Gagal menyimpan jadwal.","bad");
+    await loadCounts();
+    selected=selected.filter(k=>(counts[k]||0)<MAX_QUOTA);
+  }catch(e){
+    showMsg("Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.","bad");
+  }
+  sending=false; $("#submit").textContent="Simpan jadwal WFO"; render();
+};
+
+render(); loadCounts();
+</script>
+</body>
+</html>
